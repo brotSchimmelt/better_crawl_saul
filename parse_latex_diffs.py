@@ -71,7 +71,6 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
     if not diff_files:
         raise ValueError(f"No LaTeX diff files found in {latexdiff_directory}")
 
-    skipped_abstracts = 0
     data = []
     for diff_file in tqdm(diff_files, desc=f"Processing {domain}", unit="file"):
         # extract the abstract text from the diff file
@@ -86,7 +85,6 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
         diff_sentence = find_diff_sentence(abstract)
 
         if not diff_sentence:
-            skipped_abstracts += 1
             continue
 
         # extract the two text version and the edit actions
@@ -111,7 +109,7 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
         }
         data.append(tmp_data)
 
-    print(f"Processed {len(data)} diffs. Skipped {skipped_abstracts}. Kept {len(data)}.")
+    print(f"Processed {len(diff_files)} diffs. Skipped {len(diff_files)-len(data)}.")
 
     return data
 
@@ -288,8 +286,8 @@ def write_data_to_file(data: List[Dict[str, str]], output_path: str) -> None:
         logging.error("No data to write to file.")
         return
 
-    with open(output_path, "w") as json_file:
-        json.dump(data, json_file, indent=2)
+    with open(output_path, "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file, indent=2, ensure_ascii=False)
 
 
 def main(args: argparse.Namespace) -> None:
