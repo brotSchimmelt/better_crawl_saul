@@ -4,6 +4,8 @@ import logging
 import os
 import time
 
+from tqdm import tqdm
+
 from src.settings import DOMAINS, WIKIPEDIA_MAIN_CATEGORIES
 from src.utils import clean_text, read_data, remove_duplicates
 
@@ -47,16 +49,13 @@ def wiki_merge_all(domain: str) -> None:
         if not os.path.exists(current_dir):
             continue
 
-        print(f"Currently processing {domain} - {category}")
-
         all_dict = {}
         counter = 0
         files = os.listdir(current_dir)
-        for file_name in files:
+        for file_name in tqdm(files, desc=f"Processing {domain} - {category}", unit="files"):
             if not file_name.endswith(".json"):
                 continue
 
-            print(f"filtering {file_name} ...")
             lines = read_data(f"{current_dir}/{file_name}")
 
             if not isinstance(lines, list):
@@ -120,7 +119,7 @@ def extract_rev_history(domain: str, path: str) -> None:
 
             with open(f"{current_dir}/{file_name}", "r") as f:
                 all_dict = json.load(f)
-            print(file_name)
+            print(f"Currently merging {file_name} ...")
 
             counter = 0
             for doc_id, rev_list in all_dict.items():
