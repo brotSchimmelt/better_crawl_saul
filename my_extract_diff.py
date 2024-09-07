@@ -85,12 +85,12 @@ def write_to_latex(tmp_path, content, file_name):
     return file_path
 
 
-def generate_latex_diff(ID, ver_id, before_revision, after_revision, tmp_path):
+def generate_latex_diff(doc_id, ver_id, before_revision, after_revision, tmp_path):
     """
     Generate a LaTeX diff file between two revisions using latexdiff.
 
     Args:
-        ID (str): Document ID.
+        doc_id (str): Document ID.
         ver_id (int): Version ID for the current revision.
         before_revision (str): The content of the previous revision.
         after_revision (str): The content of the current revision.
@@ -98,18 +98,18 @@ def generate_latex_diff(ID, ver_id, before_revision, after_revision, tmp_path):
     """
     os.makedirs(tmp_path, exist_ok=True)
 
-    preprint_v1 = f"{ID}v{ver_id}"
-    preprint_v2 = f"{ID}v{ver_id+1}"
+    preprint_v1 = f"{doc_id}v{ver_id}"
+    preprint_v2 = f"{doc_id}v{ver_id+1}"
     source_file = write_to_latex(tmp_path, before_revision, preprint_v1)
     target_file = write_to_latex(tmp_path, after_revision, preprint_v2)
 
-    diff_file_path = os.path.join(tmp_path, f"{ID}_diff_v{ver_id}v{ver_id+1}.tex")
+    diff_file_path = os.path.join(tmp_path, f"{doc_id}_diff_v{ver_id}v{ver_id+1}.tex")
     latexdiff_command = f"latexdiff --ignore-warnings --math-markup=0 {source_file} {target_file} > {diff_file_path}"
 
     try:
         os.system(latexdiff_command)
     except Exception as e:
-        print(f"Error generating diff: {e}")
+        logging.error(f"Error generating diff: {doc_id} -> {e}")
 
     # clean up non-diff files to save space
     os.remove(source_file)
