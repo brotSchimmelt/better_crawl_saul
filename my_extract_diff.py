@@ -251,7 +251,7 @@ def parse_diff(directory, domain):
         directory (str): Path to the directory containing revision files.
         domain (str): Domain name (e.g., 'wikipedia' or 'wikinews').
     """
-    tmp_path = os.path.join(directory, f"tmp_{domain}")
+    tmp_path = os.path.join(directory, f"latexdiff_{domain}")
     os.makedirs(tmp_path, exist_ok=True)
 
     files = [f for f in os.listdir(directory) if domain in f and f.endswith(".json")]
@@ -274,7 +274,7 @@ def parse_diff(directory, domain):
 
 
 def main(args: argparse.Namespace) -> None:
-    parse_diff(directory="./data/filtered_revisions", domain=args.domain)
+    parse_diff(directory="./data/extracted_revisions", domain=args.domain)
 
 
 if __name__ == "__main__":
