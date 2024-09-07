@@ -145,10 +145,12 @@ def extract_rev_history(domain: str, path: str) -> None:
 def main(args: argparse.Namespace) -> None:
     wiki_merge_all(args.domain)
 
-    filtered_path = "./data/filtered_revisions"
-    os.makedirs(filtered_path, exist_ok=True)
+    merged_path = f"./data/{args.domain}/merged"
+    os.makedirs(merged_path, exist_ok=True)
 
-    extract_rev_history(args.domain, filtered_path)
+    extract_rev_history(args.domain, merged_path)
+
+    print(f"Finished processing {args.domain} data and save to {merged_path}")
 
 
 if __name__ == "__main__":
