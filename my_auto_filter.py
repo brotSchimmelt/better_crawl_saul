@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import time
 
 from src.settings import DOMAINS, WIKIPEDIA_MAIN_CATEGORIES
 from src.utils import clean_text, read_data, remove_duplicates
@@ -150,6 +151,8 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     # logging configuration
     script_name = os.path.basename(__file__).replace(".py", "")
     logging.basicConfig(
@@ -160,3 +163,9 @@ if __name__ == "__main__":
 
     args = parse_arguments()
     main(args)
+
+    # run time
+    duration = time.time() - start_time
+    hours, remainder = divmod(duration, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print(f"Script finished in {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
