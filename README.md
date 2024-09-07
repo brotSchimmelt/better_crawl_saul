@@ -1,6 +1,6 @@
 # Wikipedia and WikiNews Revision Crawler
 
-Code is based on the crawler in this [project](https://github.com/vipulraheja/iterater).
+The code is based on the web crawler used in this [project](https://github.com/vipulraheja/iterater).
 
 ## Dependencies
 
@@ -10,11 +10,27 @@ pip install -r requirements.txt
 
 ## Usage
 
+```bash
+>>> import nltk
+>>> nltk.download('punkt_tab')
+```
+
 ### Data Collection
+
+```bash
+python crawl_wiki_data.py --domain wikipedia --main_category philosophy --years_back 1
+```
 
 ### Revision Extraction
 
-### Note for later
+```bash
+python filter_and_merge_crawled_wiki_data.py --domain wikipedia
+```
 
-  >>> import nltk
-  >>> nltk.download('punkt_tab')
+```bash
+python create_latexdiffs.py --domain wikipedia
+```
+
+```bash
+python parse_latex_diffs.py --domain wikipedia
+```
