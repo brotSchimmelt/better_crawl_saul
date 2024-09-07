@@ -85,7 +85,7 @@ def wiki_merge_all(domain: str) -> None:
                 }
 
                 # key for page becomes domain_pageid
-                page_key = f"{domain}_{line['pageid']}"
+                page_key = f"{domain}-{line['pageid']}"
 
                 if page_key not in all_dict.keys():  # new page
                     all_dict[page_key] = [tmp]
