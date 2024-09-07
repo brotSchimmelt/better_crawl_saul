@@ -78,6 +78,7 @@ def wiki_merge_all(domain: str) -> None:
 
                 tmp = {
                     "revid": line["revid"],
+                    "category": category,
                     "timestamp": line["timestamp"],
                     "title": line["title"],
                     "before_revision": before_revision,
