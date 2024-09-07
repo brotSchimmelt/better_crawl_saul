@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+from typing import Tuple
 
 import mwparserfromhell
 import requests
@@ -11,6 +12,17 @@ from src.utils import get_time_range
 
 class WikiCrawler:
     def __init__(self, domain: str, main_category: str, years_back: int = 1) -> None:
+        """
+        Initializes the WikiCrawler instance with the given domain and category.
+
+        Args:
+            domain (str): The Wikipedia domain (e.g., "en", "fr").
+            main_category (str): The main category to crawl (e.g., "History").
+            years_back (int, optional): How many years back to retrieve revisions. Defaults to 1.
+
+        Raises:
+            ValueError: If the domain or main category is invalid.
+        """
         if domain not in DOMAINS:
             raise ValueError(f"Invalid domain: {domain}")
 
@@ -32,7 +44,17 @@ class WikiCrawler:
 
         self.start, self.end = get_time_range(self.years_back)
 
-    def get_data(self, gcmcontinue: str, gcmtitle: str):
+    def get_data(self, gcmcontinue: str, gcmtitle: str) -> Tuple[list, str]:
+        """
+        Retrieves pages for the given category title from Wikipedia.
+
+        Args:
+            gcmcontinue (str): Continuation parameter for paginated API requests.
+            gcmtitle (str): The category title to fetch data for.
+
+        Returns:
+            Tuple[list, str]: A tuple containing the list of pages and the continuation token.
+        """
         if gcmcontinue:
             params = {
                 "action": "query",
@@ -79,7 +101,17 @@ class WikiCrawler:
 
         return pages, gcmcontinue
 
-    def get_last_n_revisions(self, pageid: int, n: int = 20):
+    def get_last_n_revisions(self, pageid: int, n: int = 20) -> list:
+        """
+        Retrieves the last n revisions of a given page ID.
+
+        Args:
+            pageid (int): The ID of the Wikipedia page.
+            n (int, optional): The number of revisions to retrieve. Defaults to 20.
+
+        Returns:
+            list: A list of revisions for the specified page.
+        """
         response = self.session.get(
             url=self.url,
             params={
@@ -99,7 +131,17 @@ class WikiCrawler:
             print(f"Cannot get revisions for page ID: {pageid}!")
         return revisions
 
-    def parse_revision(self, pages: list, json_file):
+    def parse_revision(self, pages: list, json_file) -> list:
+        """
+        Parses the revision content for a list of pages and writes the data to a file.
+
+        Args:
+            pages (list): A list of pages to process.
+            json_file (file object): The file to write the revisions data into.
+
+        Returns:
+            list: A list of revisions processed and saved to the file.
+        """
         out = []
         for page in pages:
             pageid = page["pageid"]
@@ -128,7 +170,16 @@ class WikiCrawler:
                 out.append(rev)
         return out
 
-    def fetch_revision_content(self, revid: int):
+    def fetch_revision_content(self, revid: int) -> str:
+        """
+        Fetches and cleans the content of a specific revision by its ID.
+
+        Args:
+            revid (int): The revision ID to fetch content for.
+
+        Returns:
+            str: The cleaned revision content, or an empty string if fetching fails.
+        """
         response = self.session.get(
             url=self.url,
             params={
@@ -149,11 +200,24 @@ class WikiCrawler:
             print(f"Failed to parse revision content for {revid}")
             return ""
 
-    def write_to_file(self, json_file, data):
+    def write_to_file(self, json_file, data: dict) -> None:
+        """
+        Writes a dictionary as a JSON line to the provided file.
+
+        Args:
+            json_file (file object): The file to write the data into.
+            data (dict): The data to write as a JSON line.
+        """
         with self.file_lock:
             json_file.write(json.dumps(data) + "\n")
 
-    def process_category(self, category):
+    def process_category(self, category: str) -> None:
+        """
+        Processes a specific Wikipedia category and fetches the revision data.
+
+        Args:
+            category (str): The category to process.
+        """
         gcmtitle = f"Category:{category}"
         print(f"Processing {gcmtitle}")
 
@@ -172,7 +236,11 @@ class WikiCrawler:
                     print(f"No more pages to continue for {gcmtitle}.")
                     break
 
-    def crawl(self):
+    def crawl(self) -> None:
+        """
+        Starts the crawling process for all categories and retrieves Wikipedia revision data.
+        Uses threading to process categories in parallel.
+        """
         threads = []
         for category in self.categories:
             thread = threading.Thread(target=self.process_category, args=(category,))
