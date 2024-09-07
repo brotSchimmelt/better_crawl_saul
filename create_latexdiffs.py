@@ -75,7 +75,7 @@ def generate_latex_diff(
     target_file = write_to_latex(tmp_path, after_revision, preprint_v2)
 
     diff_file_path = os.path.join(tmp_path, f"{doc_id}_diff_v{ver_id}v{ver_id+1}.tex")
-    latexdiff_command = f"latexdiff --ignore-warnings --math-markup=0 {source_file} {target_file} > {diff_file_path}"
+    latexdiff_command = f"latexdiff --ignore-warnings --math-markup=0 {source_file} {target_file} > {diff_file_path}"  # noqa: E501
 
     try:
         os.system(latexdiff_command)
