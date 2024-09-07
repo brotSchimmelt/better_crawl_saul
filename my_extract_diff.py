@@ -11,22 +11,37 @@ from nltk.tokenize import word_tokenize
 from pylatexenc.latexwalker import LatexWalker
 from tqdm import tqdm
 
-from src.settings import DOMAINS
-from src.utils import clean_text, clean_unused  # import necessary utilities
+from src.settings import DOMAINS, WIKIPEDIA_MAIN_CATEGORIES
+from src.utils import clean_text, clean_unused
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Simple argument parser."""
+    """
+    Simple argument parser.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--domain",
         type=str,
         help="Specify document domain, please select from: wikipedia or wikinews",
     )
+    parser.add_argument(
+        "--main_category",
+        type=str,
+        help="Specify main category. For wikinews use 'all'.",
+    )
     args = parser.parse_args()
 
     if args.domain not in DOMAINS:
         raise ValueError(f"Invalid domain: {args.domain} | {DOMAINS}")
+
+    # check if main category is aligns with settings.py
+    if args.main_category is None:
+        if args.domain == "wikipedia":
+            if args.main_category not in WIKIPEDIA_MAIN_CATEGORIES:
+                raise ValueError(f"Invalid main category: {args.main_category}")
+        elif args.domain == "wikinews":
+            args.main_category = "all"
 
     return args
 
@@ -91,14 +106,12 @@ def generate_latex_diff(ID, ver_id, before_revision, after_revision, tmp_path):
     diff_file_path = os.path.join(tmp_path, f"{ID}_diff_v{ver_id}v{ver_id+1}.tex")
     latexdiff_command = f"latexdiff --ignore-warnings --math-markup=0 {source_file} {target_file} > {diff_file_path}"
 
-    # print(latexdiff_command)
-
     try:
         os.system(latexdiff_command)
     except Exception as e:
         print(f"Error generating diff: {e}")
 
-    # Clean up non-diff files to save space
+    # clean up non-diff files to save space
     os.remove(source_file)
     os.remove(target_file)
 
