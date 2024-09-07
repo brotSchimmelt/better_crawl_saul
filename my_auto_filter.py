@@ -83,11 +83,14 @@ def wiki_merge_all(domain: str) -> None:
                     "after_revision": after_revision,
                 }
 
-                if line["pageid"] not in all_dict.keys():  # new page
-                    all_dict[line["pageid"]] = [tmp]
+                # key for page becomes domain_pageid
+                page_key = f"{domain}_{line['pageid']}"
+
+                if page_key not in all_dict.keys():  # new page
+                    all_dict[page_key] = [tmp]
                     counter += 1
                 else:
-                    all_dict[line["pageid"]] += [tmp]
+                    all_dict[page_key] += [tmp]
 
         with open(f"{tmp_path}/{domain}_{category}_raw_{counter}.json", "w") as json_file:
             json.dump(all_dict, json_file, indent=2)
