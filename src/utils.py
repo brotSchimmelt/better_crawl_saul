@@ -109,8 +109,7 @@ def clean_text(text: str, domain: str) -> str:
             eid = re.search("\n See also", text).start()
         if domain == "wikinews":
             eid = re.search("Sources", text).start()
-    except Exception as e:
-        logging.error(f"An error occurred during text cleaning: {e}")
+    except Exception:
         eid = -1
     text = text[0:eid].strip("[ \n]")
     text = text.replace("thumb|", "")
