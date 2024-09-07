@@ -34,7 +34,7 @@ def wiki_merge_all(domain: str) -> None:
     This function reads raw JSON files, filters out unwanted revisions,
     cleans the text, and merges them into consolidated JSON files organized by category.
     """
-    tmp_path = f"./data/{domain}/auto"
+    tmp_path = f"./data/{domain}/filtered"
     os.makedirs(tmp_path, exist_ok=True)
 
     if domain == "wikipedia":
@@ -110,7 +110,7 @@ def extract_rev_history(domain: str, path: str) -> None:
     and writes the revision history for each document to a new JSON file.
     """
     docs = []
-    current_dir = f"./data/{domain}/auto"
+    current_dir = f"./data/{domain}/filtered"
     files = os.listdir(current_dir)
 
     with open(f"{path}/raw_{domain}.json", "a") as json_file:
