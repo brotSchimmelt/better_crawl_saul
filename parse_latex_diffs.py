@@ -99,10 +99,6 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
         if not edit_actions[0]["before"] and not edit_actions[0]["after"]:
             continue
 
-        if len(edit_actions) > 1:
-            logging.info(f"Multiple edits found in {diff_file}")
-            continue
-
         # get doc_id and revision_depth from file name
         doc_id, revision_depth = get_revision_depth_doc_id(diff_file)
 
@@ -111,9 +107,7 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
             "revision_depth": revision_depth,
             "before_revision": before_revision,
             "after_revision": after_revision,
-            "edit_type": edit_actions[0]["type"],
-            "before_edit": edit_actions[0]["before"],
-            "after_edit": edit_actions[0]["after"],
+            "edit_action": edit_actions,
         }
         data.append(tmp_data)
 
