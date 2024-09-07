@@ -52,7 +52,7 @@ def wiki_merge_all(domain: str) -> None:
         all_dict = {}
         counter = 0
         files = os.listdir(current_dir)
-        for file_name in tqdm(files, desc=f"Processing {domain} - {category}", unit="files"):
+        for file_name in tqdm(files, desc=f"Processing {domain} - {category}", unit="file"):
             if not file_name.endswith(".json"):
                 continue
 
