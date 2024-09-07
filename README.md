@@ -13,3 +13,8 @@ pip install -r requirements.txt
 ### Data Collection
 
 ### Revision Extraction
+
+### Note for later
+
+  >>> import nltk
+  >>> nltk.download('punkt_tab')
