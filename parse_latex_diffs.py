@@ -87,6 +87,13 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
         if not diff_sentence:
             continue
 
+        if (
+            diff_sentence.startswith("See also")
+            or diff_sentence.startswith("Sources")
+            or diff_sentence.startswith("Category:")
+        ):
+            continue
+
         # extract the two text version and the edit actions
         before_revision, after_revision, edit_actions = parse_edits(diff_sentence)
 
@@ -95,6 +102,9 @@ def parse_latexdiffs(latexdiff_directory: str, domain: str) -> Dict[str, str]:
             continue
 
         if not edit_actions[0]["before"] and not edit_actions[0]["after"]:
+            continue
+
+        if before_revision == after_revision:
             continue
 
         # get doc_id and revision_depth from file name
