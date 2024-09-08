@@ -180,25 +180,34 @@ class WikiCrawler:
         Returns:
             str: The cleaned revision content, or an empty string if fetching fails.
         """
-        response = self.session.get(
-            url=self.url,
-            params={
-                "action": "query",
-                "prop": "revisions",
-                "revids": f"{revid}",
-                "rvslots": "main",
-                "rvprop": "content",
-                "formatversion": "2",
-                "format": "json",
-            },
-        )
-        data = response.json()
         try:
+            response = self.session.get(
+                url=self.url,
+                params={
+                    "action": "query",
+                    "prop": "revisions",
+                    "revids": f"{revid}",
+                    "rvslots": "main",
+                    "rvprop": "content",
+                    "formatversion": "2",
+                    "format": "json",
+                },
+            )
+            response.raise_for_status()  # Ensure we catch any HTTP errors
+        except requests.exceptions.RequestException as e:
+            print(f"HTTP request failed for revision {revid}: {e}")
+            return ""  # Return empty content to keep crawling
+
+        try:
+            data = response.json()  # Attempt to decode JSON
             content = data["query"]["pages"][0]["revisions"][0]["slots"]["main"]["content"]
             return mwparserfromhell.parse(content).strip_code()
-        except (KeyError, IndexError):
-            print(f"Failed to parse revision content for {revid}")
-            return ""
+        except (KeyError, IndexError, ValueError) as e:
+            print(f"Failed to parse revision content for {revid}: {e}")
+            return ""  # Return empty content to keep crawling
+        except json.decoder.JSONDecodeError as e:
+            print(f"JSON decoding error for revision {revid}: {e}")
+            return ""  # Return empty content to keep crawling
 
     def write_to_file(self, json_file, data: dict) -> None:
         """
