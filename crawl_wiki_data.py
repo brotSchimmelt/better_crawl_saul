@@ -32,12 +32,11 @@ def parse_argument() -> argparse.Namespace:
         raise ValueError(f"Invalid domain: {args.domain} | {DOMAINS}")
 
     # check if main category is aligns with settings.py
-    if args.main_category is None:
-        if args.domain == "wikipedia":
-            if args.main_category not in WIKIPEDIA_MAIN_CATEGORIES:
-                raise ValueError(f"Invalid main category: {args.main_category}")
-        elif args.domain == "wikinews":
-            args.main_category = "all"
+    if args.domain == "wikipedia":
+        if args.main_category not in WIKIPEDIA_MAIN_CATEGORIES:
+            raise ValueError(f"Invalid main category: {args.main_category}")
+    elif args.domain == "wikinews":
+        args.main_category = "all"
 
     return args
 
