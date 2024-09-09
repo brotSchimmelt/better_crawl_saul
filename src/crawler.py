@@ -10,7 +10,14 @@ from typing import Tuple
 import mwparserfromhell
 import requests
 
-from src.settings import API_URLS, DOMAINS, WIKIPEDIA_CATEGORIES, WIKIPEDIA_MAIN_CATEGORIES
+from src.settings import (
+    API_URLS,
+    DOMAINS,
+    MAX_NUM_RETRIES,
+    MAX_THREADS,
+    WIKIPEDIA_CATEGORIES,
+    WIKIPEDIA_MAIN_CATEGORIES,
+)
 from src.utils import get_time_range
 
 
@@ -220,9 +227,9 @@ class WikiCrawler:
     def crawl(self) -> None:
         """
         Starts the crawling process for all categories and retrieves Wikipedia revision data.
-        Limits concurrency to 4 threads.
+        Limits concurrency to MAX_THREADS threads (defined in settings.py).
         """
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
             futures = [
                 executor.submit(self.process_category, category) for category in self.categories
             ]
@@ -235,7 +242,9 @@ class WikiCrawler:
 
         print("Crawling complete.")
 
-    def retry_request(self, url, params, retries=5, backoff_factor=0.5) -> requests.Response:
+    def retry_request(
+        self, url, params, retries=MAX_NUM_RETRIES, backoff_factor=0.5
+    ) -> requests.Response:
         """
         A helper function to make HTTP requests with retries and exponential backoff.
         """
@@ -245,7 +254,7 @@ class WikiCrawler:
                 response.raise_for_status()
                 return response
             except requests.exceptions.HTTPError as e:
-                if response.status_code == 429:  # Too Many Requests (rate-limited)
+                if response.status_code == 429:  # too Many Requests (rate-limited)
                     sleep_time = backoff_factor * (2**attempt) + random.uniform(0, 1)
                     print(f"Rate limited! Sleeping for {sleep_time:.2f} seconds before retrying...")
                     time.sleep(sleep_time)
