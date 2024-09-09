@@ -26,15 +26,18 @@ class WikiCrawler:
         if domain not in DOMAINS:
             raise ValueError(f"Invalid domain: {domain}")
 
-        if main_category not in WIKIPEDIA_MAIN_CATEGORIES:
-            raise ValueError(f"Invalid main category: {main_category}")
+        if domain == "wikinews":
+            self.categories = ["Published", "Original_reporting"]
+        else:
+            if main_category not in WIKIPEDIA_MAIN_CATEGORIES:
+                raise ValueError(f"Invalid main category: {main_category}")
+            self.categories = WIKIPEDIA_CATEGORIES[main_category]
 
         self.domain = domain
         self.main_category = main_category
         self.years_back = years_back
 
         self.url = API_URLS[domain]
-        self.categories = WIKIPEDIA_CATEGORIES[main_category]
 
         self.tmp_path = f"./data/{self.domain}/raw/{self.main_category}"
         os.makedirs(self.tmp_path, exist_ok=True)
