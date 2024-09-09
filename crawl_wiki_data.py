@@ -1,10 +1,13 @@
 import argparse
+import logging
+import os
+import time
 
 from src.crawler import WikiCrawler
 from src.settings import DOMAINS, WIKIPEDIA_MAIN_CATEGORIES
 
 
-def parse_argument() -> argparse.Namespace:
+def parse_arguments() -> argparse.Namespace:
     """
     Simple argument parser for the script.
     """
@@ -47,5 +50,21 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    args = parse_argument()
+    start_time = time.time()
+
+    # logging configuration
+    script_name = os.path.basename(__file__).replace(".py", "")
+    logging.basicConfig(
+        filename=f"./logs/{script_name}.log",
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+
+    args = parse_arguments()
     main(args)
+
+    # run time
+    duration = time.time() - start_time
+    hours, remainder = divmod(duration, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    print(f"Crawling finished in {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
