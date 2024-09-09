@@ -1,6 +1,10 @@
 import json
+import logging
 import os
+import random
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Tuple
 
 import mwparserfromhell
@@ -58,49 +62,31 @@ class WikiCrawler:
         Returns:
             Tuple[list, str]: A tuple containing the list of pages and the continuation token.
         """
-        if gcmcontinue:
-            params = {
-                "action": "query",
-                "generator": "categorymembers",
-                "gcmtitle": gcmtitle,
-                "gcmsort": "timestamp",
-                "gcmlimit": "100",
-                "gcmdir": "desc",
-                "gcmcontinue": gcmcontinue,
-                "formatversion": "2",
-                "format": "json",
-            }
-        else:
-            params = {
-                "action": "query",
-                "generator": "categorymembers",
-                "gcmtitle": gcmtitle,
-                "gcmsort": "timestamp",
-                "gcmlimit": "100",
-                "gcmdir": "desc",
-                "gcmstart": self.end,
-                "formatversion": "2",
-                "format": "json",
-            }
+        params = {
+            "action": "query",
+            "generator": "categorymembers",
+            "gcmtitle": gcmtitle,
+            "gcmlimit": "100",
+            "formatversion": "2",
+            "format": "json",
+        }
 
-        try:
-            response = self.session.get(url=self.url, params=params)
-            response.raise_for_status()
-            data = response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
+        if gcmcontinue:
+            params["gcmcontinue"] = gcmcontinue
+        else:
+            params["gcmstart"] = self.end
+
+        if self.domain == "wikipedia":
+            params["gcmsort"] = "timestamp"
+            params["gcmdir"] = "desc"
+
+        response = self.retry_request(self.url, params)
+        if not response:
             return [], ""
 
-        try:
-            pages = data["query"]["pages"]
-        except KeyError:
-            pages = []
-            print(f"Cannot get data for {gcmtitle}!")
-
-        try:
-            gcmcontinue = data["continue"]["gcmcontinue"]
-        except KeyError:
-            gcmcontinue = ""
+        data = response.json()
+        pages = data.get("query", {}).get("pages", [])
+        gcmcontinue = data.get("continue", {}).get("gcmcontinue", "")
 
         return pages, gcmcontinue
 
@@ -115,23 +101,22 @@ class WikiCrawler:
         Returns:
             list: A list of revisions for the specified page.
         """
-        response = self.session.get(
-            url=self.url,
-            params={
-                "action": "query",
-                "prop": "revisions",
-                "pageids": f"{pageid}",
-                "rvlimit": f"{n}",
-                "formatversion": "2",
-                "format": "json",
-            },
-        )
+        params = {
+            "action": "query",
+            "prop": "revisions",
+            "pageids": f"{pageid}",
+            "rvlimit": f"{n}",
+            "formatversion": "2",
+            "format": "json",
+        }
+
+        response = self.retry_request(self.url, params)
+        if not response:
+            return []
+
         data = response.json()
-        try:
-            revisions = data["query"]["pages"][0]["revisions"]
-        except (KeyError, IndexError):
-            revisions = []
-            print(f"Cannot get revisions for page ID: {pageid}!")
+        revisions = data.get("query", {}).get("pages", [])[0].get("revisions", [])
+
         return revisions
 
     def parse_revision(self, pages: list, json_file) -> list:
@@ -174,43 +159,27 @@ class WikiCrawler:
         return out
 
     def fetch_revision_content(self, revid: int) -> str:
-        """
-        Fetches and cleans the content of a specific revision by its ID.
+        params = {
+            "action": "query",
+            "prop": "revisions",
+            "revids": f"{revid}",
+            "rvslots": "main",
+            "rvprop": "content",
+            "formatversion": "2",
+            "format": "json",
+        }
 
-        Args:
-            revid (int): The revision ID to fetch content for.
-
-        Returns:
-            str: The cleaned revision content, or an empty string if fetching fails.
-        """
-        try:
-            response = self.session.get(
-                url=self.url,
-                params={
-                    "action": "query",
-                    "prop": "revisions",
-                    "revids": f"{revid}",
-                    "rvslots": "main",
-                    "rvprop": "content",
-                    "formatversion": "2",
-                    "format": "json",
-                },
-            )
-            response.raise_for_status()  # Ensure we catch any HTTP errors
-        except requests.exceptions.RequestException as e:
-            print(f"HTTP request failed for revision {revid}: {e}")
-            return ""  # Return empty content to keep crawling
+        response = self.retry_request(self.url, params)
+        if not response:
+            return ""
 
         try:
-            data = response.json()  # Attempt to decode JSON
+            data = response.json()
             content = data["query"]["pages"][0]["revisions"][0]["slots"]["main"]["content"]
             return mwparserfromhell.parse(content).strip_code()
         except (KeyError, IndexError, ValueError) as e:
-            print(f"Failed to parse revision content for {revid}: {e}")
-            return ""  # Return empty content to keep crawling
-        except json.decoder.JSONDecodeError as e:
-            print(f"JSON decoding error for revision {revid}: {e}")
-            return ""  # Return empty content to keep crawling
+            logging.info(f"Failed to parse revision content for {revid}: {e}")
+            return ""
 
     def write_to_file(self, json_file, data: dict) -> None:
         """
@@ -251,14 +220,39 @@ class WikiCrawler:
     def crawl(self) -> None:
         """
         Starts the crawling process for all categories and retrieves Wikipedia revision data.
-        Uses threading to process categories in parallel.
+        Limits concurrency to 4 threads.
         """
-        threads = []
-        for category in self.categories:
-            thread = threading.Thread(target=self.process_category, args=(category,))
-            threads.append(thread)
-            thread.start()
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [
+                executor.submit(self.process_category, category) for category in self.categories
+            ]
 
-        for thread in threads:
-            thread.join()
+            for future in as_completed(futures):
+                try:
+                    future.result()  # This will raise any exceptions caught in the thread
+                except Exception as e:
+                    print(f"Error occurred: {e}")
+
         print("Crawling complete.")
+
+    def retry_request(self, url, params, retries=5, backoff_factor=0.5) -> requests.Response:
+        """
+        A helper function to make HTTP requests with retries and exponential backoff.
+        """
+        for attempt in range(retries):
+            try:
+                response = self.session.get(url=url, params=params)
+                response.raise_for_status()
+                return response
+            except requests.exceptions.HTTPError as e:
+                if response.status_code == 429:  # Too Many Requests (rate-limited)
+                    sleep_time = backoff_factor * (2**attempt) + random.uniform(0, 1)
+                    print(f"Rate limited! Sleeping for {sleep_time:.2f} seconds before retrying...")
+                    time.sleep(sleep_time)
+                else:
+                    print(f"HTTP request failed: {e}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                print(f"HTTP request failed: {e}")
+                return None
+        return None
