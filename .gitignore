@@ -166,3 +166,4 @@ cython_debug/
 data/*
 logs/*
 _*.py
+Notes.md
