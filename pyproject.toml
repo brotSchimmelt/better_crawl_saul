@@ -15,6 +15,9 @@ dependencies = [
     "sentsplit==1.0.8"
 ]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.black]
 line-length = 100
 target-version = ['py310']
