@@ -4,6 +4,8 @@ This project aims to crawl revision histories from Wikipedia and WikiNews, ident
 
 The code is based on the web crawler used in this [IteraTeR project](https://github.com/vipulraheja/iterater).
 
+The resulting dataset can be found [here](https://huggingface.co/datasets/FangornGuardian/raw_wikipedia_wikinews_arxiv_revisions).
+
 ## Dependencies
 
 The crawler was tested with python 3.10.
