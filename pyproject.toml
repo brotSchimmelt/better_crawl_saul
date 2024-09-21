@@ -5,7 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "better_crawl_saul"
 version = "0.0.1"
-# dependencies = [""]
+dependencies = [
+    "mwparserfromhell==0.6.6",
+    "requests==2.32.3",
+    "pylatexenc==2.10",
+    "nltk==3.9.1",
+    "numpy==2.1.1",
+    "tqdm==4.66.5",
+    "sentsplit==1.0.8"
+]
 
 [tool.black]
 line-length = 100
