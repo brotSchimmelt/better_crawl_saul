@@ -14,7 +14,7 @@ To install the required dependencies, run:
 pip install -r requirements.txt
 ```
 
-Additionally, you need to download NLTK’s `punkt_tab package for sentence tokenization. You can do this by running the following Python commands:
+Additionally, you need to download NLTK’s `punkt_tab` package for sentence tokenization. You can do this by running the following Python commands:
 
 ```bash
 >>> import nltk
@@ -32,10 +32,6 @@ which latexdiff
 ## Usage
 
 To extract revision data at the sentence level, follow these steps:
-
-1. Crawl the revision data: Retrieve data using the Wikimedia API.
-2. Find differences between revisions: Use latexdiff to identify changes between different versions.
-3. Extract sentences: Parse the differences to analyze sentence-level changes.
 
 ## Data Collection
 
